@@ -1,0 +1,122 @@
+version: "3.8"
+
+services:
+    #zookeeper:
+    zookeeper:
+        image: confluentinc/cp-zookeeper: 7.5.0
+        container_name: zookeeper
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+        ports:
+            - "2181:2181"
+    
+    #kafka:
+    kafka:
+        image: confluentinc/cp-kafka: 7.5.0
+        container_name: kafka
+        depends_on:
+            - zookeeper
+        ports:
+            - "9092:9092"
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        healthcheck:
+            test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--list"]
+            interval: 10s
+            retries: 5
+
+    #postgres( Warehouse DB ):
+    postgres:
+        image: postgres: 15
+        container_name: postgres
+        environment:
+            POSTGRES_USER: warehouse_user
+            POSTGRES_PASSWORD: warehouse_password
+            POSTGRES_DB: payments_dw
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+    
+    # spark master:
+    spark-master:
+        image: bitnami/spark:3.5
+        container_name: spark-master
+        environment:
+            - SPARK_MODE=master
+        ports:
+            - "8080:8080"
+            - "7077:7077"
+        
+        volumes:
+            - ./spark:/opt/spark-apps
+            - spark_data:/data
+        
+    # spark worker
+    spark-worker:
+        image: bitnami/spark:3.5
+        container_name: spark-worker
+        depends_on:
+            - spark-master
+        environment:
+            - SPARK_MODE=worker
+            - SPARK_MASTER_URL=spark://spark-master:7077
+        ports:
+        - "8081:8081"
+        volumes:
+            - ./spark:/opt/spark-apps
+            - spark_data:/data
+
+    # airflow metadata database
+    airflow-db:
+        image: postgres:15
+        container_name: airflow-db
+        environment:
+            POSTGRES_USER: airflow
+            POSTGRES_PASSWORD: airflow
+            POSTGRES_DB: airflow
+        volumes:
+            - airflow_db:/var/lib/postgresql/data
+
+    # airflow web + scheduler
+    airflow:
+        image: apache/airflow:2.9.2
+        container_name: airflow
+        depends_on:
+            - airflow-db
+            - spark-master
+            - postgres
+        ports:
+            - "8088:8080"
+        environment:
+            AIRFLOW__CORE__EXECUTOR: LocalExecutor
+            AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopgg2://airflow:airflow@airflow-db:5432/airflow
+            AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+        volumes:
+            - ./airflow/dags:/opt/airflow/dags
+            - ./airflow/logs:/opt/airflow/logs
+            - ./airflow/plugins:/opt/airflow/plugins
+        command: >
+            bash -c "
+            airflow db migrate &&
+            airflow users create
+            --username admin
+            --firstname Admin
+            --lastname User
+            --role Admin
+            --email admin@example.com &&
+            airflow webserver &
+            airflow scheduler
+            "
+
+volumes:
+    postgres_data:
+    airflow_db:
+    spark_data:
+    
+
+    
