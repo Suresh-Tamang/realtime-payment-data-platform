@@ -22,7 +22,7 @@ def generate_payment():
         "currency": "USD",
         "mcc": "5411",
         "channel": random.choice(["POS", "ECOM"]),
-        "status": random.choice(["APPROVED", "DECLINED"]),
+        "auth_result": random.choice(["APPROVED", "DECLINED"]),
         "location": random.choice(["USA", "UK", "India"])
     }
   
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             producer.send(topic_name, event)
             print(event, "\n")
             #flush the producer to ensure the event is sent
-            time.sleep(0.5)  # Simulate a delay between events
+            time.sleep(0)  # Simulate a delay between events
     except KeyboardInterrupt:
         print("Stopping payment producer.") 
     finally:

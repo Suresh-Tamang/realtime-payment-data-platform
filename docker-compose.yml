@@ -48,7 +48,8 @@ services:
       - "7077:7077"
     volumes:
       - ./spark:/opt/spark-apps
-      - spark_data:/opt/spark-data
+      - ./spark_data:/opt/spark-data
+      - ivy_cache:/home/spark/.ivy2
 # Apache Spark Worker
   spark-worker:
     image: apache/spark:3.5.0
@@ -110,3 +111,4 @@ volumes:
   postgres_data:
   airflow_db:
   spark_data:
+  ivy_cache:
