@@ -40,7 +40,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
 # Apache Spark Master and Worker services
   spark-master:
-    image: apache/spark:3.5.0
+    build: .
+    image: custom-spark-with-jdbc:latest
     container_name: spark-master
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     ports:
@@ -52,8 +53,9 @@ services:
       - ivy_cache:/home/spark/.ivy2
 # Apache Spark Worker
   spark-worker:
-    image: apache/spark:3.5.0
-    container_name: spark-worker
+    build: .
+    image: custom-spark-with-jdbc:latest
+    container_name: spark-worker            
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
@@ -93,6 +95,9 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+
+      - /var/lib/docker:/var/lib/docker  # Mount Docker socket for Spark operator
+      - /var/run/docker.sock:/var/run/docker.sock
     command: >
       bash -c "
       airflow db migrate &&

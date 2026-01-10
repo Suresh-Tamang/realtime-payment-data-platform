@@ -21,3 +21,24 @@ docker exec -it kafka kafka-topics --describe --bootstrap-server kafka:9092
 ```
 docker exec -it kafka kafka-topics --delete --topic payments.raw --bootstrap-server localhost:9092
 ```
+
+
+# Streaming Data and Consuming
+### 1. Run the payments producer
+```
+python ./producer/payment_producer.py
+```
+### 2. Run the spark Job
+```
+docker exec -it spark-master bash
+```
+```
+/opt/spark/bin/spark-submit --conf "spark.driver.extraJavaOptions=-Divy.cache.dir=/tmp -Divy.home=/tmp" --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 /opt/spark-apps/streaming/payments_fraud_streaming.py
+```
+### 3. kafka console consumer
+```
+docker exec -it kafka kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--topic payments.deadletter \
+--from-beginning
+```
