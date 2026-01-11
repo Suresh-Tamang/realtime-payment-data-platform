@@ -12,7 +12,7 @@ spark = SparkSession.builder \
 
 spark.sparkContext.setLogLevel("WARN")
 
-silver_path = "/opt/spark-data/silver/payments"
+silver_path = "/opt/spark-data/silver/payments_fraud"
 jdbc_url = "jdbc:postgresql://postgres:5432/payments_dw"
 properties = {
     "user": "warehouse_user",
@@ -29,23 +29,26 @@ if os.path.exists(silver_path):
     # We ensure column names are clean for Postgres
     fact_transactions = df.select(
         "transaction_id",
-        "ts_event",
-        "card_hash",
         "merchant_id",
+        "card_hash",
         "amount",
         "currency",
         "mcc",
         "channel",
         "auth_result",
         "location",
-        "event_ts"
+        "ts_event",
+        "rule_high_amount",
+        "rule_blacklist",
+        "is_fraud",
+        "fraud_reason"
     ).coalesce(1)  # Optimization: Single connection to Postgres
 
     # 3. Write to PostgreSQL
     print("Writing to PostgreSQL table: fact_transactions...")
     fact_transactions.write.jdbc(
         url=jdbc_url,
-        table="fact_transactions",
+        table="fact_fraud_signals",
         mode="overwrite",
         properties=properties
     )

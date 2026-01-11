@@ -16,7 +16,11 @@ payment_schema = StructType([
     StructField("location", StringType())
 ])
 
-spark = SparkSession.builder.appName("PaymentsFraudDetection").getOrCreate()
+spark = SparkSession.builder.appName("PaymentsFraudDetection") \
+    .master("spark://spark-master:7077") \
+    .config("spark.sql.session.timeZone", "UTC") \
+    .getOrCreate()
+    
 spark.conf.set("spark.sql.shuffle.partitions", "4")
 
 # 1. Source (Internal Docker Port 29092)
@@ -87,8 +91,22 @@ valid_query = (
     valid_txns
     .writeStream
     .format("parquet")
+    .outputMode("append")
+    .trigger(processingTime='10 seconds')
     .option("path", "/opt/spark-data/bronze/payments")  # FIXED PATH
     .option("checkpointLocation", "/opt/spark-data/chk/bronze")
+    .start()
+)
+
+# 6. Write Fraud to Bronze Fraud Folder (Parquet)
+fraud_bronze_query = (
+    fraud_txns
+    .writeStream
+    .format("parquet")
+    .outputMode("append")
+    .trigger(processingTime='10 seconds')
+    .option("path", "/opt/spark-data/bronze/payments_fraud")  # FIXED PATH
+    .option("checkpointLocation", "/opt/spark-data/chk/bronze_fraud")
     .start()
 )
 

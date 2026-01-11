@@ -14,7 +14,10 @@ with DAG(
     bronze_to_silver = BashOperator(
         task_id="bronze_to_silver_task",
         bash_command="""
-        docker exec spark-master /opt/spark/bin/spark-submit /opt/spark-apps/batch/bronze_to_silver.py
+        docker exec spark-master /opt/spark/bin/spark-submit \
+            --master spark://spark-master:7077 \
+            --deploy-mode client \
+            /opt/spark-apps/batch/bronze_to_silver.py
         """
     )
 
@@ -23,7 +26,8 @@ with DAG(
         task_id="silver_to_gold_task",
         bash_command="""
     docker exec spark-master /opt/spark/bin/spark-submit \
-        --jars /opt/spark/jars/postgresql-42.7.3.jar \
+        --master spark://spark-master:7077 \
+        --deploy-mode client \
         /opt/spark-apps/batch/silver_to_gold.py
     """
     )
