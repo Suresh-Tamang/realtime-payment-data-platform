@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # PostgreSQL: Your Data Warehouse
+  # --- DATA WAREHOUSE ---
   postgres:
     image: postgres:15
     container_name: postgres
@@ -14,45 +14,41 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # Spark Master: The Coordinator
+  # --- BIG DATA PROCESSING (SPARK) ---
   spark-master:
     build: .
     image: custom-spark-with-jdbc:latest
     container_name: spark-master
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     ports:
-      - "8080:8080"  # Web UI
-      - "7077:7077"  # Communication Port
+      - "8080:8080"
+      - "7077:7077"
     volumes:
       - ./spark:/opt/spark-apps
       - ./spark_data:/opt/spark-data
       - ivy_cache:/home/spark/.ivy2
 
-  # Spark Worker: The actual processing muscle
   spark-worker:
-    build: .
-    image: custom-spark-with-jdbc:latest
+    image: custom-spark-with-jdbc:latest # Use the same image as master
     container_name: spark-worker            
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
     ports:
       - "8081:8081"
-    volumes:
-      - ./spark:/opt/spark-apps
-      - ./spark_data:/opt/spark-data
     environment:
       - SPARK_WORKER_CORES=2
       - SPARK_WORKER_MEMORY=2G
+    volumes:
+      - ./spark:/opt/spark-apps
+      - ./spark_data:/opt/spark-data
 
-  # Kafka and Zookeeper (Keeping your existing setup)
+  # --- STREAMING (KAFKA) ---
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-    ports:
-      - "2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -64,12 +60,13 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Fixed: Added internal listener for Spark/Airflow to connect via "kafka:29092"
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  # Airflow: Orchestrator
+  # --- ORCHESTRATION (AIRFLOW) ---
   airflow-db:
     image: postgres:15
     container_name: airflow-db
@@ -92,8 +89,6 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      AIRFLOW__CORE__DAG__RUN__CONF_OVERRIDES_PARAMS: "True"
-      AIRFLOW__CORE__KILLED_TASK_CLEANUP_TIME: "60"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -102,16 +97,22 @@ services:
     command: >
       bash -c "
       airflow db migrate &&
-      airflow users create \
-        --username admin \
-        --firstname Admin \
-        --lastname User \
-        --role Admin \
-        --email admin@example.com \
-        --password admin &&
+      airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin &&
       airflow scheduler &
-      airflow webserver
-      "
+      airflow webserver"
+
+  # --- TRANSFORMATION (DBT) ---
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:latest
+    container_name: dbt
+    depends_on:
+      - postgres
+    volumes:
+      - ./dbt:/usr/app/dbt
+    working_dir: /usr/app/dbt
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+    entrypoint: /bin/sh -c "sleep infinity"
 
 volumes:
   postgres_data:

@@ -23,7 +23,7 @@ fraud = spark.read.jdbc(
 # We use date_sub(current_date(), 1) to target exactly yesterday
 fraud_report = (
     fraud
-    .filter(to_date(col("ts_event")) == date_sub(current_date(), 1))
+    .filter(to_date(col("ts_event")) == current_date())
     .groupBy("merchant_id")
     .agg(
         count("*").alias("fraud_count"),

@@ -1,0 +1,12 @@
+payments_dbt:
+  outputs:
+    dev:
+      dbname: payments_dw
+      host: postgres
+      pass: warehouse_password
+      port: 5432
+      schema: public
+      threads: 4
+      type: postgres
+      user: warehouse_user
+  target: dev

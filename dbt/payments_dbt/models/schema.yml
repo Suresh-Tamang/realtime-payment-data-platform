@@ -1,0 +1,36 @@
+version: 2
+
+models:
+
+  - name: stg_fact_transactions
+    tests:
+      - not_null:
+          column_name: transaction_id
+
+  - name: fact_transactions
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+
+      - name: amount
+        tests:
+          - not_null
+
+  - name: fact_fraud_signals
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null
+
+  - name: fact_settlement_daily
+    columns:
+      - name: merchant_id
+        tests:
+          - not_null
+
+      - name: gross_amount
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "gross_amount >= 0"

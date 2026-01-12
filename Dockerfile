@@ -7,6 +7,12 @@ USER root
 ENV PG_VERSION=42.7.3
 ENV KAFKA_PACKAGE="org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0"
 
+# --- NEW: Install Python Dependencies ---
+# We install python3-pip first, then the libraries
+RUN apt-get update && apt-get install -y python3-pip && \
+    pip3 install --no-cache-dir pandas pyarrow && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+    
 # 2. Download the Postgres JDBC driver directly into Spark's default jar folder
 # This ensures it is available to both the Master and the Worker automatically.
 ADD https://jdbc.postgresql.org/download/postgresql-${PG_VERSION}.jar /opt/spark/jars/postgresql-${PG_VERSION}.jar

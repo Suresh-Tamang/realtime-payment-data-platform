@@ -20,7 +20,7 @@ spark = SparkSession.builder.appName("PaymentsFraudDetection") \
     .master("spark://spark-master:7077") \
     .config("spark.sql.session.timeZone", "UTC") \
     .getOrCreate()
-    
+
 spark.conf.set("spark.sql.shuffle.partitions", "4")
 
 # 1. Source (Internal Docker Port 29092)

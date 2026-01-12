@@ -23,7 +23,7 @@ fact_txn = spark.read.jdbc(
 
 settlement = (
     fact_txn
-    .filter(to_date(col("event_ts")) == date_sub(current_date(),1))
+    .filter(to_date(col("event_ts")) == current_date())
     .groupBy("merchant_id", "currency")
     .agg(
         count("*").alias("total_transactions"),
