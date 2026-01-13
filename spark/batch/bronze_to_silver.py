@@ -29,7 +29,8 @@ bronze_stream = (
 # For File-to-File streams, it works on the current micro-batch.
 silver_df = (
     bronze_stream
-    .dropDuplicates(["transaction_id"])
+    .withWatermark("event_ts","24 hours") # keep id in state for 24 hous
+    .dropDuplicates(["transaction_id","event_ts"])
     .withColumn("amount", col("amount").cast("double"))
     .withColumn("processed_at", current_timestamp())
     .filter(col("amount") >= 0)
