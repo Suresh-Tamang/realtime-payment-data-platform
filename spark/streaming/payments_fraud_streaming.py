@@ -74,6 +74,7 @@ payments = payments.withColumn(
 fraud_txns = payments.filter(col("is_fraud"))
 valid_txns = payments.filter(~col("is_fraud"))
 
+
 # 4. Write to Dead Letter (Kafka)
 fraud_query = (
     fraud_txns
@@ -109,5 +110,6 @@ fraud_bronze_query = (
     .option("checkpointLocation", "/opt/spark-data/chk/bronze_fraud")
     .start()
 )
+
 
 spark.streams.awaitAnyTermination()

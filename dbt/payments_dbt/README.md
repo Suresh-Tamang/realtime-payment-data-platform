@@ -6,10 +6,15 @@ Try running the following commands:
 - dbt run
 - dbt test
 
+## Payments dbt Models
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+### Layers
+- **Staging**: Clean, typed views from raw warehouse tables
+- **Marts**:
+  - `fact_transactions`: all transactions
+  - `fact_fraud_signals`: only flagged fraud
+  - `fact_settlement_daily`: merchant settlements
+
+### Fraud Handling
+Fraud records are not removed.
+They are flagged at ingestion and modeled separately for analytics and reporting.

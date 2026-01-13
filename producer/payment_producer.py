@@ -39,7 +39,7 @@ if __name__ == "__main__":
             producer.send(topic_name, event)
             print(event, "\n")
             #flush the producer to ensure the event is sent
-            time.sleep(1)  # Simulate a delay between events
+            time.sleep(0)  # Simulate a delay between events
     except KeyboardInterrupt:
         print("Stopping payment producer.") 
     finally:
