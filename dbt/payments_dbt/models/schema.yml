@@ -2,7 +2,7 @@ version: 2
 
 models:
 
-  - name: stg_fact_transactions
+  - name: stg_transactions
     tests:
       - not_null:
           column_name: transaction_id
@@ -34,3 +34,17 @@ models:
         tests:
           - dbt_utils.expression_is_true:
               expression: "gross_amount >= 0"
+  - name: fact_fraud_settlement_daily
+    columns:
+      - name: merchant_id
+        tests:
+          - not_null
+      
+      - name: fraud_date
+        tests:
+          - not_null
+      
+      - name: fraud_amount
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "fraud_amount >= 0"

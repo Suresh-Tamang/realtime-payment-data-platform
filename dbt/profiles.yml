@@ -5,7 +5,7 @@ payments_dbt:
       host: postgres
       pass: warehouse_password
       port: 5432
-      schema: public
+      schema: ""
       threads: 4
       type: postgres
       user: warehouse_user

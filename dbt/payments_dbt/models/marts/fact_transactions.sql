@@ -5,7 +5,7 @@ select
     amount,
     currency,
     auth_result,
-    event_ts,
-    is_fraud,
-    fraud_reason
-from {{ ref('stg_fact_tra')}}
+    event_ts
+from {{ ref('stg_transactions')}}
+where auth_result = 'APPROVED'
+and is_fraud = false
