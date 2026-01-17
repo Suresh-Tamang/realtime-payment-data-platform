@@ -132,6 +132,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - superset-init
     environment:
       - SUPERSET_SECRET_KEY=vLIUDBcHYmCe+Yy83bcfEozTYmkEkME++gTIaf3FtHVX7Y5n2pdUipcM
       - SUPERSET_SQLALCHEMY_DATABASE_URI=postgresql://warehouse_user:warehouse_password@postgres:5432/payments_dw

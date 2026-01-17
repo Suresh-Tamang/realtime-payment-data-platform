@@ -30,4 +30,15 @@ with DAG(
         /opt/spark-apps/batch/bronze_to_silver.py
         """
     )
+    # silver to warehouse
+    silver_to_warehouse = BashOperator(
+        task_id = "silver_to_warehouse",
+        bash_command="""
+        docker exec spark-master /opt/spark/bin/spark-submit \
+        --master spark://spark-master:7077 \
+        --deploy-mode client \
+        /opt/spark-apps/batch/silver_to_warehouse.py
+        """
+    )
+    bronze_to_silver >> silver_to_warehouse
     

@@ -1,5 +1,10 @@
 FROM apache/superset:latest
+
 USER root
-#install drivers
+
+# Install the driver using system pip
+# We use psycopg2-binary to avoid needing a C compiler/build-essential
 RUN pip install --no-cache-dir psycopg2-binary
+
+# Revert to superset user
 USER superset
