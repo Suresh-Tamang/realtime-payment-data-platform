@@ -1,13 +1,17 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, sum, count, to_date
+from pyspark.sql.functions import col, current_date, date_sub
+from datetime import datetime
 
 spark = SparkSession.builder \
-    .appName("GoldDailySettlement") \
-    .config("spark.jars.packages", "org.postgresql:postgresql:42.7.3") \
+    .appName("DailySettlementExport") \
+    .master("spark://spark-master:7077") \
+    .config("spark.sql.session.timeZone", "UTC") \
     .getOrCreate()
 
+spark.sparkContext.setLogLevel("WARN")
+
 jdbc_url = "jdbc:postgresql://postgres:5432/payments_dw"
-props = {
+properties = {
     "user": "warehouse_user",
     "password": "warehouse_password",
     "driver": "org.postgresql.Driver"
@@ -15,24 +19,26 @@ props = {
 
 df = spark.read.jdbc(
     url=jdbc_url,
-    table="fact_transactions",
-    properties=props
+    table="_analytics.fact_settlement_daily",
+    properties=properties
 )
 
-daily_settlement = (
-    df.filter(col("auth_result") == "APPROVED")
-      .groupBy(to_date("event_ts").alias("settlement_date"))
-      .agg(
-          sum("amount").alias("total_amount"),
-          count("*").alias("txn_count")
-    )
+
+today_df = df.filter(col("settlement_date") == current_date())
+
+today_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+output_path = f"/opt/spark-data/reports/settlement_daily/settlement_{today_str}"
+
+(
+    today_df
+    .coalesce(1)
+    .write
+    .mode("overwrite")
+    .option("header", "true")
+    .csv(output_path)
 )
 
-daily_settlement.write.jdbc(
-    url=jdbc_url,
-    table="fact_settlement_daily",
-    mode="overwrite",
-    properties=props
-)
+print(f"Settlement report generated for {today_str}")
 
 spark.stop()
