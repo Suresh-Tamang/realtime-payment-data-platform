@@ -1,37 +1,44 @@
-# from airflow import DAG
-# from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
-# from airflow.operators.bash import BashOperator
-# from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from datetime import datetime, timedelta
 
-# default_args = {
-#     "owner": "data-engineering",
-#     "retries": 2,
-#     "retry_delay": timedelta(minutes=5),
-#     "sla":timedelta(minutes=30),
-#     "email_on_failure": True,
-#     "email":["sureshtamangj@gmail.com"],
-# }
+default_args = {
+    "owner": "data-engineering",
+    "retries": 2,
+    "retry_delay": timedelta(minutes=5),
+    "sla":timedelta(minutes=5),
+    "email_on_failure": True,
+    "email":["sureshtamangj@gmail.com"],
+}
 
-# with DAG(
-#     dag_id="daily_settlement_pipeline",
-#     start_date=datetime(2026,1,1),
-#     schedule_interval="@daily",
-#     catchup=False,
-#     default_args=default_args,
-#     tags=["payments","analytics","staging"],
-# ) as dag:
+with DAG(
+    dag_id="daily_settlement_report",
+    start_date=datetime(2026,1,1),
+    schedule_interval="@daily",
+    catchup=False,
+    default_args=default_args,
+    tags=["payments","analytics","staging"],
+) as dag:
+    # To generate daily settlement report
+    daily_settlement = BashOperator(
+        task_id="payment_settlement",
+        bash_command="""
+        docker exec spark-master /opt/spark/bin/spark-submit \
+        --master spark://spark-master:7077 \
+        --deploy-mode client \
+        /opt/spark-apps/reports/settlement_daily.py
+        """
+    )
     
-#     #Batch processing bronze -> silver
-#     bronze_to_silver = SparkSubmitOperator(
-#         task_id="bronze_to_silver",
-#         application="/opt/spark-apps/batch/broneze_to_silver.py",
-#         conn_id="spark_default",
-#         application_args=[],
-#         conf={"spark.master":"spark://spark-master:7077"},
-#     )
-#     # silver layer parquet file data to Postgres Warehouse
-#     silver_to_warehouse = SparkSubmitOperator(
-#         task_id ="silver_to_gold",
-#         application="/opt/spark-apps/batch/silver_to_warehouse.py",
-#         conn_id="spark_default",
-#     )
+    # To generate daily fraud settlement report
+    daily_fraud_settlement = BashOperator(
+        task_id="fraud_settlement",
+        bash_command="""
+        docker exec spark-master /opt/spark/bin/spark-submit \
+        --master spark://spark-master:7077 \
+        --deploy-mode client \
+        /opt/spark-apps/reports/fraud_settlement_daily.py
+        """
+    )
+    
+    daily_settlement >> daily_fraud_settlement

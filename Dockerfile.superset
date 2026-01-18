@@ -1,10 +1,15 @@
+# Dockerfile
 FROM apache/superset:latest
 
 USER root
 
-# Install the driver using system pip
-# We use psycopg2-binary to avoid needing a C compiler/build-essential
-RUN pip install --no-cache-dir psycopg2-binary
+# Install build tools and Postgres client libraries
+RUN apt-get update && \
+    apt-get install -y build-essential gcc g++ libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-# Revert to superset user
+# Switch back to superset user
 USER superset
+
+# Install Superset with Postgres extras
+RUN pip install --no-cache-dir 'apache-superset[postgres]'

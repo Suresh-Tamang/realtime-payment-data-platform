@@ -1,6 +1,7 @@
 select
+    merchant_id ,
     transaction_id,
-    merchant_id,
+    ts_event,
     card_hash,
     amount,
     currency,
@@ -8,13 +9,11 @@ select
     channel,
     auth_result,
     location,
-    ts_event::timestamp as event_ts,
-
-    -- fraud flags
+    event_ts,
     rule_high_amount,
     rule_blacklist,
     is_fraud,
     fraud_reason,
-    processed_at
-
+    processed_at,
+    date
 from public.transactions

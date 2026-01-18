@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   # --- DATA WAREHOUSE ---
@@ -109,63 +108,14 @@ services:
       - postgres
     volumes:
       - ./dbt:/usr/app/dbt
-    working_dir: /usr/app/dbt
+    working_dir: /usr/app/dbt/payments_dbt
     environment:
       DBT_PROFILES_DIR: /usr/app/dbt
     entrypoint: /bin/sh -c "sleep infinity"
-## --- CACHING & BROKER (REDIS) ---
-  redis:
-    image: redis:7
-    container_name: redis
-    ports:
-      - "6379:6379"
 
-  # --- VISUALIZATION (SUPERSET) ---
-  superset:
-    build:
-      context: .
-      dockerfile: Dockerfile.superset
-    image: custom-superset:latest
-    container_name: superset
-    ports:
-      - "8089:8088"
-    depends_on:
-      - postgres
-      - redis
-      - superset-init
-    environment:
-      - SUPERSET_SECRET_KEY=vLIUDBcHYmCe+Yy83bcfEozTYmkEkME++gTIaf3FtHVX7Y5n2pdUipcM
-      - SUPERSET_SQLALCHEMY_DATABASE_URI=postgresql://warehouse_user:warehouse_password@postgres:5432/payments_dw
-      - PYTHONPATH=/app/pythonpath
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    volumes:
-      - ./superset_home:/app/superset_home
-
-  superset-init:
-    build:
-      context: .
-      dockerfile: Dockerfile.superset
-    image: custom-superset:latest
-    container_name: superset-init
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      - SUPERSET_SECRET_KEY=vLIUDBcHYmCe+Yy83bcfEozTYmkEkME++gTIaf3FtHVX7Y5n2pdUipcM
-      - SUPERSET_SQLALCHEMY_DATABASE_URI=postgresql://warehouse_user:warehouse_password@postgres:5432/payments_dw
-    volumes:
-      - ./superset_home:/app/superset_home
-    entrypoint: >
-      /bin/sh -c "
-      superset db upgrade &&
-      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin &&
-      superset init
-      "
 
 volumes:
   postgres_data:
   airflow_db:
   spark_data:
   ivy_cache:
-  superset_home:

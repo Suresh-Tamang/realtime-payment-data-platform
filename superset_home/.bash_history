@@ -1,56 +1,16 @@
-python
-ls
+pip list
+clear
+exit
 pwd
-cd ..
-ls
-cd bin
-ls
-ls | grep psy
-clear
-cd ..
-cd app
-ls
-cd pythonpath/
-ls
-clear
-cd ..
-exit
-ls
-python
-ls
-clear
-ls
-cd docker/
-ls
-cd ..
-cd pythonpath/
-ls
-cd ..
-cat setup.py 
-clear
-ls
-wich python
 which python
-python
-venv
-deactivate
+pip list
+pip install --upgrade pip
+pip list
 clear
-which python
-ls ./venv
-ls venv
-ls .venv
-cd .venv
-ls
-cd bin
-ls
-pip3 install psycopg2
-exit
-which python
-deactivate
-deactivate
-/usr/bin/python
+pip install psycopg2
+pip install psycopg2-binar
+pip install psycopg2-binary
 clear
-exit
-python
-python
+pip install postgresql
+clear
 exit
