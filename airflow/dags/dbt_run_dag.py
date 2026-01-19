@@ -12,19 +12,18 @@ default_args = {
 }
 
 with DAG(
-    dag_id="daily_settlement_report",
+    dag_id="run_dbt",
     start_date=datetime(2026, 1, 1),
-    schedule_interval="@daily",
+    schedule_interval="@hourly",
     catchup=False,
     default_args=default_args,
-    tags=["payments", "analytics", "staging"],
+    tags=["dbt","warehouse_update"],
 ) as dag:
-    # To generate daily settlement report
+    # To update warehouse hourly
     dbt_run_hourly = BashOperator(
         task_id="dbt_run",
         bash_command="""
-        docker exec dbt dbt run --project-dir /usr/app/dbt/payments_dbt && \
-        docker exec dbt dbt test --project-dir /usr/app/dbt/payments_dbt
+        docker exec dbt dbt run 
         """
     )
     

@@ -5,7 +5,6 @@ select
     f.date,
     f.transaction_id,
     f.merchant_id,
-    m.merchant_name,
     f.amount,
     f.currency,
     f.is_fraud,

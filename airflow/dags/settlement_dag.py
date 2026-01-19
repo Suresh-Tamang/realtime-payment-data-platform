@@ -20,6 +20,13 @@ with DAG(
     tags=["payments","analytics","staging"],
 ) as dag:
     # To generate daily settlement report
+    dbt_run = BashOperator(
+        task_id="dbt_run",
+        bash_command="""
+        docker exec dbt dbt run 
+        """
+    )
+    # To generate daily settlement report
     daily_settlement = BashOperator(
         task_id="payment_settlement",
         bash_command="""
@@ -41,4 +48,4 @@ with DAG(
         """
     )
     
-    daily_settlement >> daily_fraud_settlement
+    dbt_run>>daily_settlement >> daily_fraud_settlement

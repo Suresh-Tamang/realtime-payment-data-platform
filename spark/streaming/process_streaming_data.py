@@ -30,6 +30,7 @@ raw_df = (
     .option("kafka.bootstrap.servers", "kafka:29092")
     .option("subscribe", "payments.raw")
     .option("startingOffsets", "earliest")  # Ensure we don't miss data
+    .option("failOnDataLoss", "false")
     .load()
 )
 

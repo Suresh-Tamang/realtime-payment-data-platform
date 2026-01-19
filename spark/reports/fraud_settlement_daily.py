@@ -21,12 +21,12 @@ properties = {
 
 fraud_df = spark.read.jdbc(
     url=jdbc_url,
-    table="_analytics.fact_fraud_settlement_daily",
+    table="_analytics.mart_fraud_settlement_daily",
     properties=properties
 )
 
 
-today_df = fraud_df.filter(col("fraud_date") == current_date())
+today_df = fraud_df.filter(col("date") == current_date())
 
 
 today_str = datetime.utcnow().strftime("%Y-%m-%d")
