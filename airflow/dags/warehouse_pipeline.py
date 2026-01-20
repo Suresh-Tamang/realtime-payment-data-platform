@@ -40,6 +40,15 @@ with DAG(
         /opt/spark-apps/batch/silver_to_warehouse.py
         """
     )
-    bronze_to_silver >> silver_to_warehouse
+    
+    # To update warehouse hourly
+    dbt_run_hourly = BashOperator(
+        task_id="dbt_run",
+        bash_command="""
+        docker exec dbt dbt run 
+        """
+    )
+
+    bronze_to_silver >> silver_to_warehouse >> dbt_run_hourly
     
     

@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator
+from airflow.sensors.external_task import ExternalTaskSensor
 from datetime import datetime, timedelta
 
 default_args = {
@@ -19,13 +20,19 @@ with DAG(
     default_args=default_args,
     tags=["payments","analytics","staging"],
 ) as dag:
-    # To generate daily settlement report
-    dbt_run = BashOperator(
-        task_id="dbt_run",
-        bash_command="""
-        docker exec dbt dbt run 
-        """
+    
+    #wait for the dbt pipeline to finish
+    wait_for_warehouse_update = ExternalTaskSensor(
+        task_id='wait_for_warehouse_update',
+        external_dag_id='hourly_pipeline',
+        external_task_id=None,
+        check_existence=True,
+        allowed_states=['success'],
+        poke_interval=60,
+        mode='reschedule',
+        timeout=3600
     )
+    
     # To generate daily settlement report
     daily_settlement = BashOperator(
         task_id="payment_settlement",
@@ -48,4 +55,4 @@ with DAG(
         """
     )
     
-    dbt_run>>daily_settlement >> daily_fraud_settlement
+    wait_for_warehouse_update>>daily_settlement >> daily_fraud_settlement
